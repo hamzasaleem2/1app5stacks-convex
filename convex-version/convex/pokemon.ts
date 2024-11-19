@@ -70,7 +70,7 @@ const randomPokemonAggregate = new Randomize<DataModel, "pokemon">(
   components.randomPokemonAggregate,
 );
 
-//////  INIT SCRIPT BELOW
+//////  INIT STUFF BELOW
 export const addPokemon = internalMutation({
   args: { pokemon: v.array(v.object({ name: v.string(), dexId: v.number() })) },
   handler: async (ctx, args) => {
@@ -85,24 +85,21 @@ export const addPokemon = internalMutation({
   },
 });
 
+// Just run this in the Convex dashboard.
 export const initDatabase = internalAction({
   args: {},
   handler: async (ctx) => {
     const allPokemon = await getAllPokemon();
 
     const formattedPokemon = allPokemon.map((p) => ({
-      id: p.dexNumber,
+      dexId: p.dexNumber,
       name: p.name,
     }));
 
-    // Process Pokemon in batches of 100 to avoid overwhelming the system
     for (let i = 0; i < formattedPokemon.length; i += 100) {
       const batch = formattedPokemon.slice(i, i + 100);
       await ctx.runMutation(internal.pokemon.addPokemon, {
-        pokemon: batch.map((p) => ({
-          name: p.name,
-          dexId: p.id,
-        })),
+        pokemon: batch,
       });
     }
   },
