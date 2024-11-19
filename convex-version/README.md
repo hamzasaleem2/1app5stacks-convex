@@ -1,23 +1,39 @@
-# Roundest (og t3-stack edition)
+# Roundest (Convex edition)
 
 ## Setup
 
-Prerequisites: pnpm, node, postgres
+Prerequisites: npm, node
 
 1. Install deps:
 
 ```bash
-pnpm install
+npm install
 ```
 
-2. Start dev server:
+2. Provision your Convex project:
 
 ```bash
-pnpm run dev
+npx convex dev
 ```
 
-## Deployment
+(Leave this running in the background to sync backend code.)
 
-1. Pick a postgres provider, get db up, copy DATABASE_URL
-2. Push to github
-3. Click "new project" on Vercel, select repo, set DATABASE_URL
+3. Run the frontend:
+
+```bash
+npm run dev
+```
+
+App is up on [localhost:3000](http://localhost:3000).
+
+## Initializating the database
+
+1. Go to the Convex dashboard
+
+```bash
+npx convex dashboard
+```
+
+2. Pop up the functions runner (labled `Fn`).
+
+3. Run the `pokemon:initDatabase` function.

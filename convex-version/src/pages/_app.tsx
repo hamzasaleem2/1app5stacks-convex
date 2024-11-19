@@ -20,8 +20,8 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
 
   return (
     <ConvexClientProvider>
-    <div className={GeistSans.className}>
-      {getLayout(<Component {...pageProps} />)}
+      <div className={GeistSans.className}>
+        {getLayout(<Component {...pageProps} />)}
       </div>
     </ConvexClientProvider>
   );
