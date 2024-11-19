@@ -36,4 +36,4 @@ npx convex dashboard
 
 2. Pop up the functions runner (labled `Fn`).
 
-3. Run the `pokemon:initDatabase` function.
+3. Run the `pokemon:initDatabase` function, no arguments required.
