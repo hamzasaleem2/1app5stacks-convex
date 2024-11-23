@@ -30,10 +30,7 @@ function ResultsPageContents() {
 
           <div className="text-right">
             <div className="text-2xl font-bold text-blue-400">
-              {pokemon.tally.winPercentage.toFixed(1)}%
-            </div>
-            <div className="text-sm text-gray-400">
-              {pokemon.tally.upVotes}W - {pokemon.tally.downVotes}L
+              {pokemon.eloRating.toFixed(0)}
             </div>
           </div>
         </div>

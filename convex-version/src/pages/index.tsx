@@ -29,6 +29,9 @@ function VotePageContents() {
         <div className="text-center">
           <span className="text-lg text-gray-500">#{pokemonOne.dexId}</span>
           <h2 className="text-2xl font-bold capitalize">{pokemonOne.name}</h2>
+          <div className="text-sm text-gray-500">
+            Elo: {pokemonOne.eloRating.toFixed(0)}
+          </div>
           <button
             onClick={() => handleVote(pokemonOne._id, pokemonTwo._id)}
             className="rounded-lg bg-blue-500 px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-blue-600"
@@ -44,6 +47,9 @@ function VotePageContents() {
         <div className="text-center">
           <span className="text-lg text-gray-500">#{pokemonTwo.dexId}</span>
           <h2 className="text-2xl font-bold capitalize">{pokemonTwo.name}</h2>
+          <div className="text-sm text-gray-500">
+            Elo: {pokemonTwo.eloRating.toFixed(0)}
+          </div>
           <button
             onClick={() => handleVote(pokemonTwo._id, pokemonOne._id)}
             className="rounded-lg bg-blue-500 px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-blue-600"

@@ -12,47 +12,56 @@ import { v } from "convex/values";
 
 export const getPair = query({
   args: { randomSeed: v.number() },
-  handler: async (ctx): Promise<[Doc<"pokemon">, Doc<"pokemon">]> => {
-    const first = await randomPokemonAggregate.random(ctx);
-
-    let second = first;
-    while (second === first) {
-      second = await randomPokemonAggregate.random(ctx);
+  handler: async (ctx,args): Promise<[Doc<"pokemon">, Doc<"pokemon">]> => {
+    const pokemon = await ctx.db.query("pokemon").collect();
+    
+    if (pokemon.length < 2) {
+      throw new Error("Not enough pokemon in database");
     }
-    return [(await ctx.db.get(first!))!, (await ctx.db.get(second!))!];
+
+    for (let i = pokemon.length - 1; i > 0; i--) {
+      const j = Math.floor((args.randomSeed * (i + 1))) % (i + 1);
+      [pokemon[i], pokemon[j]] = [pokemon[j], pokemon[i]];
+    }
+
+    return [pokemon[0], pokemon[1]];
   },
 });
 
 export const vote = mutation({
   args: { voteFor: v.id("pokemon"), voteAgainst: v.id("pokemon") },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { voteFor, voteAgainst }) => {
     const id = await ctx.db.insert("votes", {
-      votedForId: args.voteFor,
-      votedAgainstId: args.voteAgainst,
+      votedForId: voteFor,
+      votedAgainstId: voteAgainst,
     });
-    await updateTally(ctx, args.voteFor, true);
-    await updateTally(ctx, args.voteAgainst, false);
+    await updateElo(ctx, voteFor, voteAgainst);
   },
 });
 
-async function updateTally(
-  ctx: MutationCtx,
-  pokemonId: Id<"pokemon">,
-  win: boolean,
-) {
-  const pokemon = await ctx.db.get(pokemonId);
-  let tallyOverrides = pokemon!.tally;
-  if (win) {
-    tallyOverrides.upVotes++;
-  } else {
-    tallyOverrides.downVotes++;
-  }
-  tallyOverrides.winPercentage =
-    (tallyOverrides.upVotes /
-      (tallyOverrides.upVotes + tallyOverrides.downVotes)) *
-    100;
-  await ctx.db.patch(pokemonId, {
-    tally: tallyOverrides,
+
+function calculateEloChange(winnerElo: number, loserElo: number, k = 32) {
+  const expectedScore = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+  const winnerDelta = k * (1 - expectedScore);
+  const loserDelta = k * (0 - (1 - expectedScore));
+  return [winnerDelta, loserDelta];
+}
+
+async function updateElo(ctx: MutationCtx, winnerId: Id<"pokemon">, loserId: Id<"pokemon">) {
+  const winner = await ctx.db.get(winnerId);
+  const loser = await ctx.db.get(loserId);
+
+  const [winnerEloChange, loserEloChange] = calculateEloChange(
+    winner!.eloRating,
+    loser!.eloRating
+  );
+
+  await ctx.db.patch(winnerId, {
+    eloRating: winner!.eloRating + winnerEloChange,
+  });
+
+  await ctx.db.patch(loserId, {
+    eloRating: loser!.eloRating + loserEloChange,
   });
 }
 
@@ -60,7 +69,7 @@ export const results = query({
   handler: async (ctx) => {
     return ctx.db
       .query("pokemon")
-      .withIndex("by_tally")
+      .withIndex("by_elo")
       .order("desc")
       .collect();
   },
@@ -78,7 +87,7 @@ export const addPokemon = internalMutation({
       const id = await ctx.db.insert("pokemon", {
         name: p.name,
         dexId: p.dexId,
-        tally: { winPercentage: 0, upVotes: 0, downVotes: 0 },
+        eloRating: 1200,
       });
       await randomPokemonAggregate.insert(ctx, id);
     }
